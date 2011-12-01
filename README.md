@@ -1,3 +1,3 @@
-# MVM
-## Meta-[context/config/control] Virtual Manager
+# MX
+## Meta-[context/config/control]
 
