@@ -13,17 +13,20 @@
  */
 
 #include <stdio.h>
+#include <stdlib.h>
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>
 #include <unistd.h>
-#include <sys/mman.h>
 #include <stdint.h>
+#include <sysexits.h>
+#include <err.h>
 
 
 typedef struct {
     char      *filename;
-    size_t     size;
+    int        fd;
+    ssize_t    size;
 
     char      *p_start;
     uint64_t  *p_quick;
@@ -34,60 +37,52 @@ typedef struct {
 } pstate;
 
 
-int read_in_file(char *filename) {
-    struct stat sb;
+pstate *init_from_file(char *filename) {
+    ssize_t bytes_read;
+    int     fd;
+    struct  stat statbuf;
+    pstate *state;
 
+    if( (state = (pstate *) malloc(sizeof(pstate))) == NULL)
+        err(EX_OSERR, "Couldn't allocate memory for parser state.");
+    if( (fd = open(filename, O_RDONLY)) < 0)
+        err(EX_NOINPUT, "Couldn't open %s.", filename);
 
-    fd = open(argv[1], O_RDONLY);    if(fd == -1) {perror("open");  return 1;}
-    if(fstat(fd, &sb) == -1)                      {perror("fstat"); return 1;}
-    if(!S_ISREG (sb.st_mode)) {
-        fprintf (stderr, "%s is not a file\n", filename);
-        return 1;
+    if( fstat(fd, &statbuf) == -1)
+        err(EX_NOINPUT, "Opened, but couldn't stat %s.", filename);
+
+    state->size     = statbuf.st_size;
+    state->filename = filename;
+    
+    if( (state->p_start = (char *) malloc(state->size+2)) == NULL)
+        err(EX_OSERR, "Couldn't allocate memory for file contents (%s).", filename);
+
+    if( (bytes_read = read(fd, state->p_start, state->size)) != state->size)
+        err(EX_DATAERR, "Only read %zd of %zd bytes from %s.", bytes_read, state->size, filename);
+
+    state->p_curr   = state->p_start;
+    state->p_quick  = (uint64_t *) state->p_start;
+    state->p_curr[state->size] = 0; // Null terminate the whole thing just in case
+    close(fd);
+    return state;
+}
+
+void free_state(pstate *state) {
+    if(state != NULL) {
+        if(state->p_start != NULL) free(state->p_start);
+        state->p_start = NULL;
+        free(state);
     }
-    // TODO: figure out exact size...
+}
 
-    // TODO: allocate and initialize a new pstate
 
-    //p = mmap (0, sb.st_size, PROT_READ, MAP_SHARED, fd, 0);
-    //if (p == MAP_FAILED) { perror ("mmap"); return 1; }
+int parse(pstate *state) {
 
 }
 
 
 int main (int argc, char *argv[]) {
-    struct stat sb;
-    off_t len;
-    char *p;
-    int fd;
-
-    //if (argc < 2) { fprintf (stderr, "usage: %s <file>\n", argv[0]); return 1; }
-
-    fd = open(argv[1], O_RDONLY);
-    fstat(fd, &sb);
-    p = mmap(0, sb.st_size, PROT_READ, MAP_SHARED, fd, 0);
-    close(fd);
-    for (len = 0; len < sb.st_size; len++) putchar (p[len]);
-    munmap(p, sb.st_size);
-
-    //if (fd == -1) { perror ("open"); return 1; }
-
-    //if (fstat (fd, &sb) == -1) { perror ("fstat"); return 1; }
-
-    //if (!S_ISREG (sb.st_mode)) { fprintf (stderr, "%s is not a file\n", argv[1]); return 1; }
-
-    //p = mmap (0, sb.st_size, PROT_READ, MAP_SHARED, fd, 0);
-    //if (p == MAP_FAILED) { perror ("mmap"); return 1; }
-
-    //if (close (fd) == -1) { perror ("close"); return 1; }
-
-    //for (len = 0; len < sb.st_size; len++)
-        //putchar (p[len]);
-
-    //if (munmap (p, sb.st_size) == -1) { perror ("munmap"); return 1; }
-    //return 0;
-}
-
-
-int main(int argc, char *argv[]) {
-
+    pstate *state = init_from_file("../sjson-examples/example.sjson");
+    parse(state);
+    free_state(state);
 }
