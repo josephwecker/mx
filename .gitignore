@@ -2,3 +2,5 @@
 .DS_Store
 *.o
 *.a
+autoscan.log
+autom4te.cache

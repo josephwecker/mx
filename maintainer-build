@@ -1,0 +1,9 @@
+#!/bin/bash
+set -e
+set -x
+git log | grep ^Author: | sort -u | cut -f'2-' -d' ' > AUTHORS
+git log --date=short --pretty="[%cd | %h | <%aE>]  %s%n" > ChangeLog
+aclocal
+autoconf
+autoheader
+automake --add-missing
