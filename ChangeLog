@@ -1,3 +1,9 @@
+[2011-12-02 | e08c1a2 | <joseph.wecker@gmail.com>]  Starting the subjson parser
+
+[2011-12-01 | 81db73a | <joseph.wecker@gmail.com>]  Whoops, accidentally had the symlink
+
+[2011-12-01 | 5600467 | <jwecker@justin.tv>]  Updated with latest commits
+
 [2011-12-01 | a3614e5 | <jwecker@justin.tv>]  Default autotools install script
 
 [2011-12-01 | 8a40b40 | <jwecker@justin.tv>]  Generated files that I'm putting in the repo anyway so people can compile.
