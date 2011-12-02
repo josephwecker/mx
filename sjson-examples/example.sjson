@@ -1,0 +1,20 @@
+|*/gamer-transcoder/*/*/
+  |python/2.7.2
+  |pip/simplejson/2.2.1
+  |sub/amqp-worker/master
+  |sub/avconv/master
+  |sub/usher-client/master
+  |sub/flvtools/master
+
+|/t1/*/*/*/
+  ruby/head 
+
+|/t2/*/*/*/:
+  ruby/1.9.2
+
+|/t3/*/*/*/:
+  ruby/kiji
+
+|/t4/*/*/*/:
+  ruby/blahblah
+}
