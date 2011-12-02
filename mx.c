@@ -13,7 +13,7 @@
 #define streq(s1, s2) (strcmp((s1),(s2)) == 0)
 
 #define PATHSIZE 1024
-#define MCDIR "/.metacon"
+#define MCDIR "/.mx"
 #define MCDIR_L 9
 
 char root_dir[PATHSIZE];
@@ -63,45 +63,49 @@ int go_up(char *dir) {
 }
 
 void curr() {
-    // 1. project name (directory or .metacon/ override)
+    // 1. project name (directory or .mx/ override)
     // 2. git context/state (with state flags like merging/cherry-picking/unmerged...)
-    // 3. context (environment)
+    // 3. environment
     // 4. role
     // 5. machine (host)
     // 6. os
-
+    
     stat_project
     printf("/");
     stat_context(1);
     printf("/");
     stat_role(1);
-
 }
 
-int main(int argc, char *argv[]) {
+int main(int argc, char *argv[], char *envp[]) {
     if(argc < 2) {
         usage();
         return 1;
     }
-
-    /* --Commands--
-     * [very, very fast]
-     * (no command-line arguments = curr + help)
-     * help
-     * c[urr[ent]] [project,git,context,role,machine,os]
+    /* -- Commands --
+     *                                    => stat + help
+     * (help|-h|--help|-help)             => help
+     * (version|-v|--version|-version)    => version
      *
-     * ps1 - modular
-     * conf
-     * * - anything else and it triggers it under current context
+     * init [directory]                   => init
+     * st[at] [-verbose] [-long] [type]   => stat  `mx st env` == `mx env`
      *
-     * [fast]
-     * refresh (to ensure dependencies etc. without switching)
-     * stat
-     * branch  (current/list/set)(via git of course)
-     * role    (current/list/set)
-     * ctx     (current/list/set)(rtc...)
-     * os      (current/list/(set?))
-     * host    (current/list/(set?))
+     * role [-list|new]                   => role_ops
+     * env[ironment] [-list|new]          => env_ops
+     * os                                 => os_ops
+     * host                               => host_ops
+     *
+     * conf[ig] [group]                   => conf
+     * refresh                            => refresh project based on current stat
+     *
+     * [COMMAND]                          => misc. command from .mx/commands/...
+     *
+     * -- Environment variables / settings --
+     *
+     * environment  |  settings  |  default
+     * -------------+------------+-----------
+     *  MX_COLOR    | mx-color   |    1
+     *  MX_PATH     | mx-path    | 
      *
      */
 
@@ -111,7 +115,7 @@ int main(int argc, char *argv[]) {
         if(find_root_dir()) {
             curr();
         } else {
-            error("Not in a metacon project.");
+            error("Not in a mx project.");
         }
     } else error("Unknown command %s. Try 'help'.", argv[1]);
 }
