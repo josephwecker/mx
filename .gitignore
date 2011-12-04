@@ -4,3 +4,4 @@
 *.a
 autoscan.log
 autom4te.cache
+a.out
