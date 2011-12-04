@@ -27,9 +27,10 @@
                              uint64_t *qeof  = state->p_qend;  \
                              char     *eof   = state->p_end;
 #define COMMIT_STATE()       state->p_quick = qcurr; state->p_curr = curr
-#define discard_and_commit() curr++; COMMIT_STATE();
+#define discard() curr++; COMMIT_STATE();
 
 // Modified from http://graphics.stanford.edu/~seander/bithacks.html#ZeroInWord
+                         //  (v - 0x0101...) & ~v & 0x8080...
 #define q_haszero(v)         ((v) - UINT64_C(0x0101010101010101)) & ~(v) & UINT64_C(0x8080808080808080)
 #define q_hasval(v,n)        (q_haszero((v) ^ (~UINT64_C(0)/255 * (n))))
 
@@ -40,9 +41,18 @@
                              while((qcurr <= qeof) && !q_hasval(*qcurr,(c1)) && !q_hasval(*qcurr,(c2)))\
                                  qcurr++; \
                              curr=(char *)qcurr;     \
-                             while((curr <= eof) && (*curr != c1) && (*curr != c2))\
+                             while((curr <= eof) && (*curr != (c1)) && (*curr != (c2)))\
+                                 curr++;
+#define qscan3(c1,c2,c3)     qcurr=(uint64_t *)curr; \
+                             while((qcurr <= qeof) && !q_hasval(*qcurr,(c1)) && !q_hasval(*qcurr,(c2)) && !q_hasval(*qcurr,(c3)))\
+                                 qcurr++; \
+                             curr=(char *)qcurr;     \
+                             while((curr <= eof) && (*curr != (c1)) && (*curr != (c2)) && (*curr != (c3)))\
                                  curr++;
 
+// { 0x7b 
+// [ 0x5b
+// # 0x23
 
 
 typedef struct {
@@ -60,8 +70,22 @@ typedef struct {
     // ref_start for current "word" start...
     //
     // structures for holding the results objects...
+    //
+    // a 0111 1011
+    // b 0101 1011
+    // c 0010 0011
+    //   ---------
+    //   0222 2033
+    //
+    // if(!(n & 0000,0011 ^ 1111,1100)) {
+    //   if(
+    //
 } pstate;
 
+void reset_state(pstate *state) {
+    state->p_curr   = state->p_start;
+    state->p_quick  = (uint64_t *) state->p_start;
+}
 
 pstate *init_from_file(char *filename) {
     ssize_t bytes_read;
@@ -88,8 +112,7 @@ pstate *init_from_file(char *filename) {
     if( (bytes_read = read(fd, state->p_start, state->size)) != state->size)
         err(EX_DATAERR, "Only read %zd of %zd bytes from %s.", bytes_read, state->size, filename);
 
-    state->p_curr   = state->p_start;
-    state->p_quick  = (uint64_t *) state->p_start;
+    reset_state(state);
     state->p_end    = &(state->p_start[state->size - 1]);
     state->p_qend   = &(state->p_quick[state->qsize - 1]);
     state->p_curr[state->size] = 0; // Null terminate the whole thing just in case
@@ -106,37 +129,34 @@ void free_state(pstate *state) {
 }
 
 int parse(pstate *state) {
+    UNPACK_STATE();
     return toplevel(state);
 }
 
 int toplevel(pstate *state) {
     UNPACK_STATE();
+    int found = 0;
     while(curr <= eof) {
-        qscan2('{','[');
+        qscan3('{','[','#');
         switch(*curr) {
-            case '{':
-                discard_and_commit();
-                new_dict(state);
-                break;
-            case '[':
-                discard_and_commit();
-                new_list(state);
-                break;
-            default:
-                discard_and_commit();
+            case '{': discard(); found += new_dict(state); break;
+            case '[': discard(); found += new_list(state); break;
+            default:  discard();
         }
     }
+    return found;
 }
 
 int new_dict(pstate *state) {
-    printf("\n-->DICT\n%s\n", state->p_curr);
-
+    //printf("\n-->DICT\n%s\n", state->p_curr);
+    return 1;
 }
 
 int new_list(pstate *state) {
-    printf("\n-->LIST\n%s\n", state->p_curr);
+    //printf("\n-->LIST\n%s\n", state->p_curr);
     // - create structure
     // - next_value* until ']'
+    return 1;
 }
 
 int next_value(pstate *state) {
@@ -150,7 +170,13 @@ int next_value(pstate *state) {
 
 
 int main (int argc, char *argv[]) {
-    pstate *state = init_from_file("../sjson-examples/example.sjson");
-    parse(state);
+    int i;
+    int found = 0;
+    pstate *state = init_from_file("../sjson-examples/big.txt");
+    for(i=0; i<10000; i++) {
+        found += parse(state);
+        reset_state(state);
+    }
     free_state(state);
+    printf("%d\n", found);
 }
