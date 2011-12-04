@@ -141,13 +141,15 @@ int toplevel(pstate *state) {
         switch(*curr) {
             case '{': discard(); found += new_dict(state); break;
             case '[': discard(); found += new_list(state); break;
-            default:  discard();
+            case '#': discard(); found ++; break;
+            default:  discard(); // EOF
         }
     }
     return found;
 }
 
 int new_dict(pstate *state) {
+
     //printf("\n-->DICT\n%s\n", state->p_curr);
     return 1;
 }
