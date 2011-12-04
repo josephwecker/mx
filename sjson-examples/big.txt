@@ -2,10 +2,12 @@
 JSON Example
 
 This page shows examples of messages formatted using JSON (JavaScript Object Notation).
-
+[]
+{}
+          #----------------------
 {
     "glossary": {
-        "title": "example glossary",
+        "title": "example glossary",   # Here's a comment - even though normal json doesn't allow them.
 		"GlossDiv": {
             "title": "S",
 			"GlossList": {
