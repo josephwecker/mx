@@ -1,0 +1,4 @@
+#!/usr/bin/env ruby
+
+cmd = File.join(File.dirname(__FILE__), '..', 'shelp', 'metacon-installer.sh')
+exec cmd
